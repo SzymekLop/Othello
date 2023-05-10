@@ -171,8 +171,14 @@ public class Othello {
             if(board[currX][currY] != move.getPlayer() && board[currX][currY] != 0){
                 board[currX][currY] = move.getPlayer();
                 switch (move.getPlayer()) {
-                    case 1 -> firstPoints++;
-                    case 2 -> secondPoints++;
+                    case 1:
+                        firstPoints++;
+                        secondPoints--;
+                        break;
+                    case 2:
+                        secondPoints++;
+                        firstPoints--;
+                        break;
                 }
             }
             else{
@@ -190,9 +196,6 @@ public class Othello {
 
     public void printBoard(){
 
-//        for(int i = 0; i < 2 * BOARD_SIZE + 1; i++){
-//            System.out.print("-");
-//        }
         System.out.println("  0-1-2-3-4-5-6-7-");
         for (int i = 0; i < BOARD_SIZE; i++){
             System.out.print(i +" ");

@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 public class AIPlayer extends Player{
 
-    private static final int DEPTH = 5;
+    private static final int DEPTH = 2;
     private final IHeuristic heuristic;
     private final DecisionTree decisionTree;
     private final String mode;
@@ -41,7 +41,7 @@ public class AIPlayer extends Player{
         private int player;
 
         public DecisionTree(Othello game, int player){
-            this.currState = new Node(game, null, null, 1);
+            this.currState = new Node(game, null, new Move(-1, -1, 2), 1);
             this.player = player;
         }
 
@@ -52,7 +52,8 @@ public class AIPlayer extends Player{
             for(Node child : currState.children){
                 boolean comp = child.change.equals(move);
                 if(comp){
-                    currState= child;
+                    currState = child;
+                    currState.parent = null;
                     return;
                 }
             }
@@ -61,8 +62,8 @@ public class AIPlayer extends Player{
         public Move pickMoveMinMax(int player){
 
             fillTree(currState, 0);
-            minMax(currState, 0, player);
-            if(currState.children.isEmpty()){
+            minMax(currState, 0);
+            if(currState.children.isEmpty() || currState.children.get(0).change.getPlayer() != player){
                 return null;
             }
             int bestValue = currState.children.get(0).value;
@@ -74,13 +75,14 @@ public class AIPlayer extends Player{
                 }
             }
             currState = currState.children.get(bestIndex);
+            currState.parent = null;
             return currState.change;
         }
 
         public Move pickMoveAlphaBeta(int player){
 
             fillTree(currState, 0);
-            alphaBeta(currState, 0, Integer.MIN_VALUE, Integer.MAX_VALUE, player);
+            alphaBeta(currState, 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
             if(currState.children.isEmpty()){
                 return null;
             }
@@ -93,6 +95,7 @@ public class AIPlayer extends Player{
                 }
             }
             currState = currState.children.get(bestIndex);
+            currState.parent = null;
             return currState.change;
         }
 
@@ -107,17 +110,17 @@ public class AIPlayer extends Player{
             }
         }
 
-        public int minMax(Node curr, int depth, int player){
+        public int minMax(Node curr, int depth){
 
             if(depth >= DEPTH || curr.state.isOver()){
                 curr.value = heuristic.heuristicValue(curr.state, this.player);
                 return curr.value;
             }
-            int nextPlayer = 1 == player ? 2 : 1;
-            if(player == this.player){
+
+            if(curr.turn == this.player){
                 int maxEval = Integer.MIN_VALUE;
                 for(Node kid : curr.children){
-                    int eval = minMax(kid, depth + 1, nextPlayer);
+                    int eval = minMax(kid, depth + 1);
                     maxEval = Integer.max(maxEval, eval);
                 }
                 curr.value = maxEval;
@@ -126,7 +129,7 @@ public class AIPlayer extends Player{
             else{
                 int minEval = Integer.MAX_VALUE;
                 for(Node kid : curr.children){
-                    int eval = minMax(kid, depth + 1, nextPlayer);
+                    int eval = minMax(kid, depth + 1);
                     minEval = Integer.min(minEval, eval);
                 }
                 curr.value = minEval;
@@ -134,67 +137,41 @@ public class AIPlayer extends Player{
             }
         }
 
-        public int alphaBeta(Node curr, int depth, int alpha, int beta, int player){
+        public int alphaBeta(Node curr, int depth, int alpha, int beta){
 
             if(depth >= DEPTH || curr.state.isOver()){
-                return heuristic.heuristicValue(curr.state, player);
+                curr.value = heuristic.heuristicValue(curr.state, this.player);
+                return curr.value;
             }
-            if(player == 1){
+            if(curr.turn == this.player){
                 int maxEval = Integer.MIN_VALUE;
                 for(Node kid : curr.children){
-                    int eval = alphaBeta(kid, depth + 1, alpha, beta, 2);
+                    int eval = alphaBeta(kid, depth + 1, alpha, beta);
                     maxEval = Integer.max(maxEval, eval);
-                    alpha = Integer.max(alpha, eval);
-                    if(beta <= alpha)
+                    alpha = Integer.max(alpha, maxEval);
+                    if(beta <= alpha) {
+                        curr.value = maxEval;
                         break;
+                    }
                 }
+                curr.value = maxEval;
                 return maxEval;
             }
             else{
                 int minEval = Integer.MAX_VALUE;
                 for(Node kid : curr.children){
-                    int eval = alphaBeta(kid, depth + 1, alpha, beta, 1);
+                    int eval = alphaBeta(kid, depth + 1, alpha, beta);
                     minEval = Integer.min(minEval, eval);
-                    beta = Integer.min(beta, eval);
-                    if(beta <= alpha)
+                    beta = Integer.min(beta, minEval);
+                    if(beta <= alpha) {
+                        curr.value = minEval;
                         break;
+                    }
                 }
+                curr.value = minEval;
                 return minEval;
             }
         }
-
-//        private int bestChildren(int player){
-//
-//            int bestIndex = 0;
-//            Node best = currState;
-//            for (int i = 0; i < currState.children.size(); i++) {
-//
-//                LinkedList<Node> subQueue = new LinkedList<>();
-//                subQueue.add(currState.children.get(i));
-//                while (!subQueue.isEmpty()){
-//                    Node curr = subQueue.removeFirst();
-//                    if(curr.state.isOver() && curr.state.getWinner() == player){
-//                        return i;
-//                    }
-//                    else{
-//                        if(curr.depth >= DEPTH){
-//                            if(curr.turn == player && best.value < curr.value){
-//                                best = curr;
-//                                bestIndex = i;
-//                            }
-//                            else if(curr.turn != player && best.value > curr.value){
-//                                best = curr;
-//                                bestIndex = i;
-//                            }
-//                        }
-//                        else{
-//                            subQueue.addAll(curr.children);
-//                        }
-//                    }
-//                }
-//            }
-//            return bestIndex;
-//        }
 
         private class Node {
 
@@ -223,8 +200,14 @@ public class AIPlayer extends Player{
 
                 int nextTurn = turn == 1 ? 2 : 1;
 
+                if(possibleMoves.isEmpty()){
+                    possibleMoves = state.getPossibleMoves(nextTurn);
+                    nextTurn = turn;
+                }
+
+                int finalNextTurn = nextTurn;
                 return possibleMoves.stream()
-                        .map(move -> new Node(state.makeMove(move), this, move, nextTurn))
+                        .map(move -> new Node(state.makeMove(move), this, move, finalNextTurn))
                         .collect(Collectors.toCollection(ArrayList::new));
             }
         }

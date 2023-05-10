@@ -4,6 +4,7 @@ import Logic.Move;
 import Logic.Othello;
 import Player.Player;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Game {
@@ -20,14 +21,16 @@ public class Game {
     }
 
     public void play(){
+        ArrayList<Long> laps = new ArrayList<>();
         int turn = 1;
         int i = 0;
-        Scanner scn = new Scanner(System.in);
+
         while (!game.isOver()){
-            System.out.println("iteration " + i);
+            System.out.println("Move " + i);
             game.printBoard();
             System.out.println();
             i++;
+            laps.add(System.currentTimeMillis());
             Move toProcess = null;
             if(turn == 1){
                 toProcess = player1.makeMove();
@@ -53,12 +56,24 @@ public class Game {
                     player1.updateStatus(toProcess);
                 }
                 game = game.makeMove(toProcess);
-                //scn.next();
             }
 
             turn = turn == 1 ? 2 : 1;
+            laps.add(System.currentTimeMillis());
         }
-        System.out.println(game.getWinner());
+        System.out.println("Winner: Player" + game.getWinner());
+        System.out.println("Player1 points: " + game.getFirstPoints() + ", Player2 points: " + game.getSecondPoints());
+        long processingTime = 0;
+        ArrayList<Long> times = new ArrayList<>();
+        for(int j = 0; j <laps.size(); j += 2){
+            long time = laps.get(j + 1) - laps.get(j);
+            processingTime += time;
+            times.add(time);
+        }
+        System.out.println("Total processing time: " + processingTime);
+        for(long time : times){
+            System.out.print(time + " ");
+        }
 
     }
 
