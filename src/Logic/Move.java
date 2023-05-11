@@ -21,10 +21,6 @@ public class Move {
                 '}';
     }
 
-    public boolean equals(Move move){
-        return x == move.x && y == move.y && player == move.player;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -5,7 +5,6 @@ import Logic.Othello;
 import Player.Player;
 
 import java.util.ArrayList;
-import java.util.Scanner;
 
 public class Game {
 

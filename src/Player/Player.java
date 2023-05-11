@@ -9,7 +9,7 @@ import java.util.Scanner;
 public class Player {
 
     protected final int player;
-    protected final Othello state;
+    protected Othello state;
 
     public Player(int player, Othello state){
         this.player = player;
@@ -17,14 +17,19 @@ public class Player {
     }
 
     public Move makeMove(){
-
+        ArrayList<Move> possibleMoves = state.getPossibleMoves(player);
+        if(possibleMoves.isEmpty()){
+            return null;
+        }
+        System.out.println("Pick one of possible moves");
+        for(Move possible : possibleMoves){
+            System.out.println("X: " + possible.getX() + ", Y: " + possible.getY());
+        }
         Scanner scn = new Scanner(System.in);
         System.out.print("Pass horizontal coord: ");
         int x = scn.nextInt();
-        System.out.print("\nPass vertical coord: ");
+        System.out.print("Pass vertical coord: ");
         int y = scn.nextInt();
-        System.out.println();
-        ArrayList<Move> possibleMoves = state.getPossibleMoves(player);
         Move decision = null;
         for(Move possible : possibleMoves){
             if(possible.getX() == x && possible.getY() == y){
@@ -32,6 +37,7 @@ public class Player {
             }
         }
         if(decision != null){
+            state = state.makeMove(decision);
             return decision;
         }
         else{
@@ -44,6 +50,6 @@ public class Player {
     }
 
     public void updateStatus(Move enemyMove){
-        state.makeMove(enemyMove);
+        state = state.makeMove(enemyMove);
     }
 }

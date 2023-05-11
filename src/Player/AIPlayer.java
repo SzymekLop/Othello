@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 public class AIPlayer extends Player{
 
-    private static final int DEPTH = 2;
+    private static final int DEPTH = 4;
     private final IHeuristic heuristic;
     private final DecisionTree decisionTree;
     private final String mode;

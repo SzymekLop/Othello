@@ -141,10 +141,6 @@ public class Othello {
             case 2 -> secondPoints++;
         }
 
-        if(board[move.getX()][move.getY()] != 0){
-            System.out.println("Cheater!!!!!!!!!!!!!!!!!!!!!!!!");
-        }
-
         board[move.getX()][move.getY()] = move.getPlayer();
 
         for (int xDirection = -1; xDirection <= 1; xDirection++) {
